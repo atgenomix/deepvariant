@@ -57,6 +57,7 @@ _ALLOW_EXECUTION_HARDWARE = [
     'auto',  # Default, no validation.
     'cpu',  # Don't use accelerators, even if available.
     'accelerator',  # Must be hardware acceleration or an error will be raised.
+    'seqslab',  # Limit cores as 1 per Spark task for SeqsLab data parallelization
 ]
 
 # The number of digits past the decimal point that genotype likelihoods are
@@ -105,7 +106,8 @@ flags.DEFINE_string(
     'option is primarily for QA purposes to allow users to validate their '
     'accelerator environment is correctly configured. In auto mode, the '
     'default, op placement is entirely left up to TensorFlow.  In tpu mode, '
-    'use and require TPU.')
+    'use and require TPU. In seqslab mode, use CPU and limit number of cores'
+    ' as 1 per Spark task')
 
 # Cloud TPU Cluster Resolvers
 flags.DEFINE_string(
@@ -302,8 +304,12 @@ def call_variants(examples_filename,
             execution_hardware, ','.join(_ALLOW_EXECUTION_HARDWARE)))
   init_op = tf.group(tf.global_variables_initializer(),
                      tf.local_variables_initializer())
-  device_count = {'GPU': 0, 'TPU': 0} if execution_hardware == 'cpu' else {}
-  config = tf.ConfigProto(device_count=device_count)
+  device_count = {'GPU': 0, 'TPU': 0, 'CPU': 1} if execution_hardware == 'cpu' or execution_hardware == 'seqslab' else {}
+  config = (
+      tf.ConfigProto(device_count=device_count, allow_soft_placement=True, intra_op_parallelism_threads=1,
+                     inter_op_parallelism_threads=1)
+      if execution_hardware == 'seqslab' else tf.ConfigProto(device_count=device_count))
+
   with tf.Session(config=config) as sess:
     sess.run(init_op)
     if execution_hardware == 'accelerator':

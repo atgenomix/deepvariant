@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2017 Google Inc.
 #
 # Redistribution and use in source and binary forms, with or without
