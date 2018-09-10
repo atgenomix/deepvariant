@@ -57,7 +57,8 @@ _ALLOW_EXECUTION_HARDWARE = [
     'auto',  # Default, no validation.
     'cpu',  # Don't use accelerators, even if available.
     'accelerator',  # Must be hardware acceleration or an error will be raised.
-    'seqslab',  # Limit cores as 1 per Spark task for SeqsLab data parallelization
+    'seqslab',  # Limit cores as 1 per Spark task for SeqsLab data parallelization.
+    'seqslab_gpu',  # Limit cores as 1 per Spark task with GPU acceleration.
 ]
 
 # The number of digits past the decimal point that genotype likelihoods are
@@ -137,6 +138,10 @@ flags.DEFINE_string(
     'for more information. The default value is 0, which provides the best '
     'performance in our tests. Set this flag to "" to not set the variable.')
 
+#seqslab_gpu
+flags.DEFINE_integer(
+    'percentage_gpu_memory', 16,
+    'Percentage of GPU memory per Spark Task (each partition in SeqsLab). ')
 
 class ExecutionHardwareError(Exception):
   pass
@@ -304,15 +309,17 @@ def call_variants(examples_filename,
             execution_hardware, ','.join(_ALLOW_EXECUTION_HARDWARE)))
   init_op = tf.group(tf.global_variables_initializer(),
                      tf.local_variables_initializer())
+  gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=float(FLAGS.percentage_gpu_memory/100)) if execution_hardware == 'seqslab_gpu' else {}
   device_count = {'GPU': 0, 'TPU': 0, 'CPU': 1} if execution_hardware == 'cpu' or execution_hardware == 'seqslab' else {}
   config = (
       tf.ConfigProto(device_count=device_count, allow_soft_placement=True, intra_op_parallelism_threads=1,
-                     inter_op_parallelism_threads=1)
-      if execution_hardware == 'seqslab' else tf.ConfigProto(device_count=device_count))
+                     inter_op_parallelism_threads=1, gpu_options=gpu_options)
+      if execution_hardware == 'seqslab' or execution_hardware == 'seqslab_gpu'
+      else tf.ConfigProto(device_count=device_count))
 
   with tf.Session(config=config) as sess:
     sess.run(init_op)
-    if execution_hardware == 'accelerator':
+    if execution_hardware == 'accelerator' or execution_hardware == 'seqslab_gpu':
       if not any(dev.device_type != 'CPU' for dev in sess.list_devices()):
         raise ExecutionHardwareError(
             'execution_hardware is set to accelerator, but no accelerator '
