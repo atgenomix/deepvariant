@@ -309,8 +309,7 @@ def call_variants(examples_filename,
             execution_hardware, ','.join(_ALLOW_EXECUTION_HARDWARE)))
   init_op = tf.group(tf.global_variables_initializer(),
                      tf.local_variables_initializer())
-  gpu_options = tf.GPUOptions(visible_gpu_devices="0",
-                              per_process_gpu_memory_fraction=float(FLAGS.percentage_gpu_memory/100)) \
+  gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=float(FLAGS.percentage_gpu_memory/100)) \
       if execution_hardware == 'seqslab_gpu' else {}
   device_count = {'GPU': 0, 'TPU': 0, 'CPU': 1} \
       if execution_hardware == 'cpu' or execution_hardware == 'seqslab' else {}
