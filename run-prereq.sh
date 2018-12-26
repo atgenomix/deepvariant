@@ -151,12 +151,20 @@ if [[ "${DV_GPU_BUILD}" = "1" ]]; then
     echo "Checking for CUDA..."
     if ! dpkg-query -W cuda-9-0; then
       echo "Installing CUDA..."
-      CUDA_DEB="cuda-repo-ubuntu1604_9.0.176-1_amd64.deb"
-      curl -O http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/${CUDA_DEB}
-      sudo -H apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
-      sudo -H dpkg -i ./cuda-repo-ubuntu1604_9.0.176-1_amd64.deb
-      sudo -H apt-get update
-      sudo -H apt-get -y install cuda-9-0
+      if [[ "$(lsb_release -d)" != *Ubuntu*16.*.* ]]; then
+        CUDA_DEB="cuda-repo-ubuntu1604_9.0.176-1_amd64.deb"
+        curl -O http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/${CUDA_DEB}
+        sudo -H apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/7fa2af80.pub
+        sudo -H dpkg -i ./cuda-repo-ubuntu1604_9.0.176-1_amd64.deb
+        sudo -H apt-get update
+        sudo -H apt-get -y install cuda-9-0
+      else
+        wget https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda-repo-ubuntu1604-9-0-local_9.0.176-1_amd64-deb
+        sudo -H dpkg -i cuda-repo-ubuntu1604-9-0-local_9.0.176-1_amd64-deb
+        sudo -H apt-key add /var/cuda-repo-9-0-local/7fa2af80.pub
+        sudo -H apt-get update
+        sudo -H apt-get install -y cuda-libraries-9-0
+      fi
     fi
 
     echo "Checking for CUDNN..."
