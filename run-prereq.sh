@@ -142,7 +142,7 @@ fi
 
 if [[ "${DV_GPU_BUILD}" = "1" ]]; then
   if [[ "${DV_INSTALL_GPU_DRIVERS}" = "1" ]]; then
-    if [[ "$(lsb_release -d)" != *Ubuntu*16.*.* && "$(lsb_release -d)" != *Debian*9.*.* ]]; then
+    if [[ "$(lsb_release -d)" != *Ubuntu*16.*.* && "$(lsb_release -d)" != *Debian*9.* ]]; then
       echo "CUDA installation only configured for Ubuntu 16 or Debian 9"
       exit 1
     fi
