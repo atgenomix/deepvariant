@@ -32,15 +32,21 @@ set -euo pipefail
 
 echo ========== Load config settings.
 
+touch /root/build-prereq-0-init
+
 source settings.sh
 
 ################################################################################
 # Misc. setup
 ################################################################################
 
+touch /root/build-prereq-1-misc-setup
+
 note_build_stage "Install the runtime packages"
 
 ./run-prereq.sh
+
+touch /root/build-prereq-2-done-run-prepreq
 
 note_build_stage "Update package list"
 
@@ -50,11 +56,15 @@ note_build_stage "Install development packages"
 
 sudo -H apt-get -y install pkg-config zip g++ zlib1g-dev unzip curl git
 
+touch /root/build-prereq-3-done-misc-setup
+
 ################################################################################
 # Java
 ################################################################################
 
 note_build_stage "Install Java and friends"
+
+touch /root/build-prereq-4-java
 
 # Java is available on Kokoro, so we add this cutout.
 if ! java -version 2>&1 | fgrep "1.8"; then
@@ -81,11 +91,15 @@ else
   echo "Java 8 found, will not reinstall."
 fi
 
+touch /root/build-prereq-5-done-java
+
 ################################################################################
 # bazel
 ################################################################################
 
 note_build_stage "Install bazel"
+
+touch /root/build-prereq-6-bazel
 
 function ensure_wanted_bazel_version {
   local wanted_bazel_version=$1
@@ -111,11 +125,15 @@ function ensure_wanted_bazel_version {
 
 ensure_wanted_bazel_version "${DV_BAZEL_VERSION}"
 
+touch /root/build-prereq-7-done-bazel-${DV_BAZEL_VERSION}
+
 ################################################################################
 # CLIF
 ################################################################################
 
 note_build_stage "Install CLIF binary"
+
+touch /root/build-prereq-8-CLIF
 
 if [[ -e /usr/local/clif/bin/pyclif ]];
 then
@@ -146,11 +164,15 @@ https://github.com/google/clif before continuing."
   sudo ldconfig  # Reload shared libraries.
 fi
 
+touch /root/build-prereq-9-done-CLIF
+
 ################################################################################
 # TensorFlow
 ################################################################################
 
 note_build_stage "Download and configure TensorFlow sources"
+
+touch /root/build-prereq-10-tf
 
 if [[ ! -d ../tensorflow ]]; then
   note_build_stage "Cloning TensorFlow from github as ../tensorflow doesn't exist"
@@ -163,3 +185,4 @@ fi
 
 note_build_stage "build-prereq.sh complete"
 
+touch /root/build-prereq-11-done-tf

@@ -34,10 +34,17 @@
 # Google Cloud Engine chipsets lowest possible is Sandy Bridge).
 
 # NOLINT
+
+touch /root/build-release-binaries-0-init
+
 source settings.sh
+
+touch /root/build-release-binaries-1-bazel
 
 bazel --batch build -c opt \
   ${DV_COPT_FLAGS} \
   --build_python_zip :binaries
 
 bazel --batch build :licenses_zip
+
+touch /root/build-release-binaries-2-done-bazel

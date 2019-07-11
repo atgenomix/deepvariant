@@ -33,6 +33,8 @@
 # by DeepVariant at runtime (except for tensorflow, which is special).
 # Some extra stuff may also be included.
 
+touch /root/run-prereq-0-init
+
 set -euo pipefail
 
 echo ========== Load config settings.
@@ -44,6 +46,8 @@ source settings.sh
 ################################################################################
 
 note_build_stage "Misc setup"
+
+touch /root/run-prereq-1-misc-setup
 
 if [[ "$EUID" = "0" ]]; then
   # Ensure sudo exists, even if we don't need it.
@@ -64,11 +68,15 @@ note_build_stage "Install python packaging infrastructure"
 sudo -H apt-get -y install python-dev python-pip python-wheel
 sudo -H pip install --upgrade pip
 
+touch /root/run-prereq-2-done-misc-setup
+
 ################################################################################
 # python packages
 ################################################################################
 
 note_build_stage "Install python packages"
+
+touch /root/run-prereq-3-python
 
 sudo -H pip install contextlib2
 sudo -H pip install enum34
@@ -89,12 +97,15 @@ sudo -H pip install pandas
 sudo -H pip install psutil
 sudo -H pip install --upgrade google-api-python-client
 
+touch /root/run-prereq-4-done-python
 
 ################################################################################
 # TensorFlow
 ################################################################################
 
 note_build_stage "Install TensorFlow pip package"
+
+touch /root/run-prereq-5-tf-pip
 
 if [[ "${DV_USE_PREINSTALLED_TF}" = "1" ]]; then
   echo "Skipping TensorFlow installation at user request; will use pre-installed TensorFlow."
@@ -135,10 +146,13 @@ else
   fi
 fi
 
+touch /root/run-prereq-6-done-tf-pip
 
 ################################################################################
 # CUDA
 ################################################################################
+
+touch /root/run-prereq-7-cuda
 
 if [[ "${DV_GPU_BUILD}" = "1" ]]; then
   if [[ "${DV_INSTALL_GPU_DRIVERS}" = "1" ]]; then
@@ -180,10 +194,13 @@ if [[ "${DV_GPU_BUILD}" = "1" ]]; then
   nvidia-smi || :
 fi
 
+touch /root/run-prereq-8-done-cuda
 
 ################################################################################
 # Misc dependencies
 ################################################################################
+
+touch /root/run-prereq-9-mis-dep
 
 note_build_stage "Install other packages"
 
@@ -194,3 +211,5 @@ sudo -H apt-get -y install libssl-dev libcurl4-openssl-dev liblz-dev libbz2-dev 
 sudo -H apt-get -y install libboost-graph-dev
 
 note_build_stage "run-prereq.sh complete"
+
+touch /root/run-prereq-10-done-mis-dep
